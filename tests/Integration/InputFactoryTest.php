@@ -269,10 +269,11 @@ final class InputFactoryTest extends TestCase
         $this->assertSame(0, $dto->stock);
         $this->assertSame(['name', 'price'], Inputs::provided($dto));
 
+        // Through reflection: static analysis reports a direct assignment
+        // differently on PHP 8.3 and 8.4 (readonly implies protected(set)).
         $this->expectException(\Error::class);
         $this->expectExceptionMessage('Cannot modify readonly property');
-        // @phpstan-ignore property.readOnlyAssignOutOfClass (the point of the test)
-        $dto->name = 'Table';
+        (new \ReflectionProperty($dto, 'name'))->setValue($dto, 'Table');
     }
 
     public function testTheConstructorRunsAfterTheWholeInputIsValid(): void
