@@ -1,0 +1,53 @@
+{
+  "name": "solophp/input",
+  "type": "library",
+  "description": "Typed, validated input DTOs for PHP 8.3+: immutable classes built through their constructor from HTTP input, with attribute-driven validation, casting and processing",
+  "keywords": ["input", "dto", "request", "validation", "mapping", "immutable", "php", "psr-7", "php8", "strict-types"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Vitaliy Olos",
+      "email": "vedastudio@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Solo\\Input\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Solo\\Input\\Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": "^8.3",
+    "psr/container": "^2.0",
+    "psr/http-message": "^2.0",
+    "solophp/contracts": "^1.3"
+  },
+  "suggest": {
+    "solophp/validator": "^4.1"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12.3",
+    "phpstan/phpstan": "^2.1",
+    "squizlabs/php_codesniffer": "^3.13"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "config": {
+    "sort-packages": true,
+    "optimize-autoloader": true
+  },
+  "scripts": {
+    "cs-check": "phpcs --standard=PSR12 src/",
+    "cs-fix": "phpcbf --standard=PSR12 src/",
+    "analyze": "phpstan analyze",
+    "test": [
+      "@cs-check",
+      "@analyze",
+      "phpunit"
+    ]
+  }
+}

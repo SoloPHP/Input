@@ -1,0 +1,15 @@
+!.gitignore
+/vendor/
+/.phpunit.cache/
+.phpunit.result.cache
+/coverage/
+/coverage-report/
+coverage.xml
+composer.lock
+.idea
+.DS_Store
+Thumbs.db
+.vscode/
+docs/node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/

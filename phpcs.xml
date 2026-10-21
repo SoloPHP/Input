@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<ruleset name="Solo Input">
+    <description>Coding standard for Solo Input</description>
+
+    <!-- Use PSR-12 as base -->
+    <rule ref="PSR12"/>
+
+    <!-- Scan these directories -->
+    <file>src</file>
+    <file>tests</file>
+
+    <!-- Allow multiple classes in test files -->
+    <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
+        <exclude-pattern>*/tests/*</exclude-pattern>
+    </rule>
+</ruleset>
