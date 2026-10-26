@@ -20,7 +20,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/installation' },
       { text: 'Features', link: '/features/field-attribute' },
       { text: 'API', link: '/api/input-factory' },
-      { text: 'v1.0.0-RC1', link: 'https://github.com/solophp/input/releases' },
+      { text: 'v1.0.0-RC2', link: 'https://github.com/solophp/input/releases' },
       {
         text: 'Links',
         items: [

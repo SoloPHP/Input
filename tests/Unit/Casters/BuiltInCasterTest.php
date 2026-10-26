@@ -59,6 +59,50 @@ final class BuiltInCasterTest extends TestCase
         $this->assertSame('true', $this->caster->cast('json', true));
     }
 
+    public function testCastDecimalWritesPlainNotationWithoutLosingDigits(): void
+    {
+        $cases = [
+            [5, '5'], [-7, '-7'], ['+5', '5'], ['005', '5'], ['5.0', '5'], ['5.', '5'], ['.5', '0.5'],
+            // What `(string) $float` writes in exponent notation, and what a client may type.
+            [0.00001, '0.00001'], ['1e-5', '0.00001'], ['1.0E-5', '0.00001'], [6.3e-5, '0.000063'],
+            [41.25, '41.25'], ['41.250', '41.25'], [0.1, '0.1'], ['1e3', '1000'], [1.0e22, '10000000000000000000000'],
+            // The fewest digits that read back, even for a power of two (2 ** -24 has 17 exact ones).
+            [2 ** -24, '0.00000005960464477539063'],
+            [-0.0, '0'], ['-0.000', '0'], ['0e99999999999', '0'], [' 7 ', '7'],
+            // A string keeps digits a float cannot hold.
+            ['12345678901234567890.123456789', '12345678901234567890.123456789'],
+            [new CasterTestDecimal('2.50'), '2.5'],
+        ];
+        foreach ($cases as [$input, $expected]) {
+            $this->assertSame($expected, $this->caster->cast('decimal', $input), var_export($input, true));
+        }
+        // Not numbers, or numbers a float overflows or rounds to zero.
+        foreach (['abc', '1,5', '0x1A', '1e400', '1e-400', INF, NAN, true, []] as $input) {
+            $this->assertNull($this->caster->cast('decimal', $input), var_export($input, true));
+        }
+    }
+
+    public function testCastDecimalRangeIsAFloatsNotAColumns(): void
+    {
+        // The edges pass whole: precision is the column's to enforce.
+        $this->assertSame('1' . str_repeat('0', 308), $this->caster->cast('decimal', '1e308'));
+        $this->assertSame('0.' . str_repeat('0', 322) . '1', $this->caster->cast('decimal', '1e-323'));
+
+        // Past them a short input is refused before it can expand.
+        $start = hrtime(true);
+        $this->assertNull($this->caster->cast('decimal', '1e-99999999'));
+        $this->assertNull($this->caster->cast('decimal', '1e99999999'));
+        $this->assertLessThan(0.5, (hrtime(true) - $start) / 1e9);
+    }
+
+    public function testCastDecimalReadsALongRunOfBlanksInLinearTime(): void
+    {
+        // trim() keeps a leading form feed; backtracking over the blanks after it took seconds.
+        $start = hrtime(true);
+        $this->assertNull($this->caster->cast('decimal', "\f" . str_repeat(' ', 200_000) . 'x'));
+        $this->assertLessThan(0.5, (hrtime(true) - $start) / 1e9);
+    }
+
     public function testCastArrayFromTraversableKeepsEveryItem(): void
     {
         // iterator_to_array() would keep the keys and return ['c', 'd'].
@@ -89,7 +133,7 @@ final class BuiltInCasterTest extends TestCase
 
     public function testCastNull(): void
     {
-        foreach (['int', 'float', 'bool', 'string', 'array', 'json'] as $type) {
+        foreach (BuiltInCaster::CAST_TYPES as $type) {
             $this->assertNull($this->caster->cast($type, null), $type);
         }
     }
@@ -180,4 +224,16 @@ enum CasterTestLevel: int
 {
     case Low = 1;
     case High = 2;
+}
+
+final readonly class CasterTestDecimal implements \Stringable
+{
+    public function __construct(private string $value)
+    {
+    }
+
+    public function __toString(): string
+    {
+        return $this->value;
+    }
 }

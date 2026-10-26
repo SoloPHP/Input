@@ -48,6 +48,7 @@ final class SchemaBuilderTest extends TestCase
 
         $this->assertSame('json', $schema['settings']['cast']);
         $this->assertSame('string', $schema['settings']['type']);
+        $this->assertSame('decimal', $schema['rate']['cast']);
         $this->assertSame('float', $schema['amount']['cast']);
         $this->assertTrue($schema['note']['emptyToNull']);
         $this->assertTrue($schema['snippet']['noTrim']);
@@ -194,6 +195,8 @@ final class SchemaInputHintsInput
     public function __construct(
         #[Cast('json')]
         public ?string $settings = null,
+        #[Cast('decimal')]
+        public ?string $rate = null,
         #[Cast('float')]
         public int|float $amount = 0,
         #[EmptyToNull]

@@ -125,7 +125,8 @@ final readonly class SchemaBuilder
             $field['cases'] = array_column($property->enumClass::cases(), 'value');
         }
         // What the client may send when the type does not say it: any JSON
-        // value for #[Cast('json')], a float for #[Cast('float')] on int|float.
+        // value for #[Cast('json')], a number for #[Cast('decimal')], a float
+        // for #[Cast('float')] on int|float.
         if ($property->effectiveCastType !== null && $property->effectiveCastType !== $property->type) {
             $field['cast'] = $property->effectiveCastType;
         }

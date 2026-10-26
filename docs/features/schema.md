@@ -118,7 +118,7 @@ $schema = $factory->schema(UpdateProductInput::class);
 | `rules` | `list<{name, args}>` | Full normalized rule list |
 | `format` | `string` | Only for `#[DateFormat]` dates |
 | `cases` | `list<int\|string>` | Only for `BackedEnum` properties: the allowed values |
-| `cast` | `string` | Only when the built-in cast differs from `type`: `json` (any JSON value, stored encoded), or the `#[Cast]` of a union / `mixed` property |
+| `cast` | `string` | Only when the built-in cast differs from `type`: `json` (any JSON value, stored encoded), `decimal` (a number, stored as a plain decimal string), or the `#[Cast]` of a union / `mixed` property |
 | `emptyToNull` | `true` | Only with `#[EmptyToNull]`: a blank string is read as no value |
 | `noTrim` | `true` | Only with `#[NoTrim]`: the string is kept as sent instead of auto-trimmed |
 | `fields` | field schemas | Only for a nested DTO property |

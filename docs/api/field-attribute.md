@@ -86,7 +86,7 @@ final class Cast
 }
 ```
 
-Built-in cast: `int`, `float`, `bool`, `string`, `array` or `json` (case-insensitive). Needed only where the declared type does not imply one — a union or `mixed` property — and for `json`, which encodes a structured value into a `string` (or untyped / `mixed`) property; a string is kept as it is.
+Built-in cast: `int`, `float`, `bool`, `string`, `array`, `json` or `decimal` (case-insensitive). Needed only where the declared type does not imply one — a union or `mixed` property — and for `json`, which encodes a structured value into a `string` (or untyped / `mixed`) property, a string being kept as it is, and `decimal`, which writes a number into such a property in plain decimal notation (see [Type Casting](/features/type-casting#decimal)).
 
 Passing a class name throws `ConfigurationException::castExpectsBuiltInType` at metadata-build time — use `#[Caster]` for custom logic. Other unknown strings throw `ConfigurationException::unknownCastType`. Dates are not a cast: a date property's class follows its type, with `#[DateFormat]` for a fixed format. Mutually exclusive with `#[Caster]`, `#[DateFormat]` and `#[Items]`.
 

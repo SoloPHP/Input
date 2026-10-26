@@ -127,6 +127,11 @@ final class MetadataBuilderTest extends TestCase
         ];
         yield 'missing caster class' => [CasterWithNonExistentClassInput::class, 'invalid #[Caster('];
         yield 'not a generator' => [InvalidGeneratorInput::class, 'invalid #[Generator('];
+        yield 'class type named like a cast' => [
+            CastNamedTypeInput::class,
+            "::\$rate has type 'decimal'",
+            'cannot be produced from request input',
+        ];
         yield 'type no input can hold' => [
             IntersectionTypedInput::class,
             '::$items has type',
@@ -438,6 +443,16 @@ final class IntersectionTypedInput
     public function __construct(
         /** @var \Countable&\ArrayAccess<int, mixed> */
         public \Countable&\ArrayAccess $items,
+    ) {
+    }
+}
+
+#[Input]
+final class CastNamedTypeInput
+{
+    public function __construct(
+        // Typed with a class named `decimal` (none exists), not the cast of that name.
+        public ?\decimal $rate = null, // @phpstan-ignore class.notFound, class.notFound (property, parameter)
     ) {
     }
 }
