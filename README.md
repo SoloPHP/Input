@@ -14,7 +14,7 @@ Typed, validated input DTOs for PHP 8.3+. An input DTO is a plain `#[Input]` cla
 - **Lossless type casting** — driven by the declared type: int, float, bool, string, array, `DateTime` / `DateTimeImmutable`, backed enums and custom casters. `"12abc"` for an int, `"maybe"` for a bool or an unknown enum value is a validation error, never a silently coerced value.
 - **Validation rules** — passed verbatim to your `ValidatorInterface`; every field present in the input — route and context values included — lands in the validation payload, so cross-field rules work without special syntax.
 - **All errors at once** — validator errors, cast failures, missing fields and nested errors come back in one `ValidationException`, keyed by the input the client sent (`display_name`, `customer.id`, `lines.0.qty`). Post-processors, generators and the constructor run only for valid input.
-- **PATCH-ready** — `Inputs::provided()` tells a field the client sent, even as `null`, from one left at its default; `Inputs::toArray($input, onlyProvided: true)` is the change set.
+- **PATCH-ready** — `Inputs::provided()` tells a field the client sent, even as `null`, from one left at its default; `Inputs::toArray($input, onlyProvided: true)` is the change set, and a class marked `#[Input(partial: true)]` exports it by default.
 - **Processing stages** — `#[Normalize]` prepares raw input, `#[Caster]` creates its type, `#[PostProcess]` transforms decoded values after the whole tree is valid.
 - **Nested DTOs** — a field typed with an `#[Input]` class is a nested object, `#[Items]` makes a list of them.
 - **PSR-11 ready** — normalizers, casters, post-processors and generators with dependencies come from your container.
@@ -116,7 +116,8 @@ A DTO holds its fields and nothing else; `Solo\Input\Inputs` reads it the way th
 
 ```php
 Inputs::toArray($input);                      // every field but #[Exclude] ones; nested DTOs as arrays
-Inputs::toArray($input, onlyProvided: true);  // only what the client sent — the change set of a PATCH
+Inputs::toArray($input, onlyProvided: true);  // only what the client sent — the change set of a PATCH;
+                                              // the default for a class marked #[Input(partial: true)]
 Inputs::provided($input);                     // ['name', 'note'] — sent, even as null
 Inputs::isProvided($input, 'note');
 Inputs::group($input, 'criteria');            // the #[Group('criteria')] fields as one array

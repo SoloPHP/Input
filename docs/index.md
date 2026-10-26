@@ -37,7 +37,7 @@ features:
     details: 'A field typed with an #[Input] class is a nested object; #[Items] makes a list of them.'
   - icon: 🩹
     title: PATCH-ready
-    details: 'Inputs::provided() tells a field the client sent — even as null — from one left at its default; Inputs::toArray($input, onlyProvided: true) is the change set.'
+    details: 'Inputs::provided() tells a field the client sent — even as null — from one left at its default; Inputs::toArray($input, onlyProvided: true) is the change set, and the default for a class marked #[Input(partial: true)].'
   - icon: 📐
     title: Schema export
     details: schema() emits the JSON-serializable input contract keyed like the errors — types, requiredness, rules, defaults, date formats, enum cases, nested schemas.

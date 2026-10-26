@@ -21,7 +21,8 @@ use Solo\Input\Pipeline\ProvidedFields;
  * ```php
  * $input = $inputs->fromBody(UpdateProductInput::class, $request);
  *
- * Inputs::toArray($input);                     // every field but #[Exclude] ones
+ * Inputs::toArray($input);                     // every field but #[Exclude] ones —
+ *                                              // the change set for #[Input(partial: true)]
  * Inputs::toArray($input, onlyProvided: true); // the change set of a PATCH
  * Inputs::group($input, 'criteria');           // the #[Group('criteria')] fields
  * Inputs::isProvided($input, 'note');          // sent, even as null?
@@ -38,12 +39,17 @@ final class Inputs
      * a PATCH. A nested DTO the factory did not build — one the application
      * passed in context — is a value supplied as a whole.
      *
+     * Without it, the class decides: `#[Input(partial: true)]` gives the
+     * change set — nothing, for a DTO the factory did not build — and any
+     * other class every field. Nested DTOs follow the call they are in.
+     *
      * @return array<string, mixed>
      */
-    public static function toArray(object $input, bool $onlyProvided = false): array
+    public static function toArray(object $input, ?bool $onlyProvided = null): array
     {
         $result = [];
         $metadata = ReflectionCache::of($input::class);
+        $onlyProvided ??= $metadata->partial;
         $provided = $onlyProvided ? ProvidedFields::of($input) : [];
 
         foreach ($metadata->properties as $name => $property) {

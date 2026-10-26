@@ -354,6 +354,47 @@ final class InputFactoryTest extends TestCase
         $this->assertSame([], Inputs::toArray($dto, onlyProvided: true));
     }
 
+    // ===== #[Input(partial: true)] =====
+
+    public function testAPartialInputExportsTheChangeSet(): void
+    {
+        $dto = $this->factory->fromArray(PartialAddressInput::class, ['city' => 'Kyiv', 'note' => null]);
+
+        // Read, an absent field is its default; exported, it is not part of
+        // the change unless every field is asked for.
+        $this->assertNull($dto->zip);
+        $this->assertSame(['city' => 'Kyiv', 'note' => null], Inputs::toArray($dto));
+        $this->assertSame(
+            ['city' => 'Kyiv', 'zip' => null, 'note' => null],
+            Inputs::toArray($dto, onlyProvided: false),
+        );
+        $this->assertSame(
+            [],
+            Inputs::toArray(new PartialAddressInput(city: 'Lviv')),
+            'a DTO built with new supplied nothing',
+        );
+    }
+
+    public function testPartialPassesToSubclassesWithoutAMarkerOfTheirOwn(): void
+    {
+        $inherited = $this->factory->fromArray(InheritedPartialInput::class, ['city' => 'Kyiv']);
+        $overridden = $this->factory->fromArray(OverriddenPartialInput::class, ['city' => 'Kyiv']);
+
+        $this->assertSame(['city' => 'Kyiv'], Inputs::toArray($inherited));
+        $this->assertSame(['city' => 'Kyiv', 'zip' => null, 'note' => null], Inputs::toArray($overridden));
+    }
+
+    public function testNestedDtosFollowTheCallTheyAreIn(): void
+    {
+        $dto = $this->factory->fromArray(PartialLinesInput::class, ['lines' => [['sku' => 'A']]]);
+
+        $this->assertSame(['lines' => [['sku' => 'A']]], Inputs::toArray($dto));
+        $this->assertSame(
+            ['lines' => [['sku' => 'A', 'qty' => 1]], 'note' => null],
+            Inputs::toArray($dto, onlyProvided: false),
+        );
+    }
+
     // ===== generator =====
 
     public function testContainerProvidesHandlersWithDependencies(): void
@@ -1028,6 +1069,40 @@ final class PatchLinesInput
         /** @var list<LineItemInput> */
         #[Items(LineItemInput::class)]
         public array $lines = [],
+    ) {
+    }
+}
+
+#[Input(partial: true)]
+class PartialAddressInput
+{
+    public function __construct(
+        public ?string $city = null,
+        public ?string $zip = null,
+        public ?string $note = null,
+    ) {
+    }
+}
+
+// No marker of its own: the parent's partial flag holds.
+final class InheritedPartialInput extends PartialAddressInput
+{
+}
+
+// A marker of its own decides: this one exports every field.
+#[Input]
+final class OverriddenPartialInput extends PartialAddressInput
+{
+}
+
+#[Input(partial: true)]
+final class PartialLinesInput
+{
+    public function __construct(
+        /** @var list<LineItemInput> */
+        #[Items(LineItemInput::class)]
+        public array $lines = [],
+        public ?string $note = null,
     ) {
     }
 }
