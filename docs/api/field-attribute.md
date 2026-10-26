@@ -10,10 +10,15 @@
 
 ```php
 #[Attribute(Attribute::TARGET_CLASS)]
-final class Input {}
+final class Input
+{
+    public function __construct(public bool $partial = false) {}
+}
 ```
 
 Marks an input class. `InputFactory` builds it through its constructor, a field typed with it is a nested DTO, and `#[Items]` accepts it. Its constructor parameters are its fields: each needs a public property of the same name — promoted, or inherited from a parent constructor. A field with a default is optional; one without fails `required` when absent. The marker on a parent class applies to its subclasses. Building a class without it throws `ConfigurationException::notAnInput`.
+
+`partial: true` marks the body of a partial update (PATCH). An absent field still reads as its default, but [`Inputs::toArray()`](/api/input-factory#toarray) leaves it out unless called with `onlyProvided: false` — the array is the change set, so a default never overwrites what is stored. A subclass without a marker of its own keeps the parent's flag; one with `#[Input]` decides for itself.
 
 ---
 

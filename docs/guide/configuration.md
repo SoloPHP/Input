@@ -288,7 +288,7 @@ final readonly class MyInput
 
 There is no base class. The readers live in `Inputs`:
 
-- `Inputs::toArray($input, onlyProvided: false)` — the fields as an array (`#[Exclude]` ones left out; with `onlyProvided`, also those the request did not supply)
+- `Inputs::toArray($input, onlyProvided: null)` — the fields as an array (`#[Exclude]` ones left out; with `onlyProvided: true`, also those the request did not supply; left out, `true` for a `#[Input(partial: true)]` class)
 - `Inputs::provided($input)` / `Inputs::isProvided($input, $name)` — which fields the request supplied (PATCH)
 - `Inputs::group($input, $name)` — the fields of a `#[Group]`
 - `Inputs::clearCache()` — drop the metadata cache (test helper)

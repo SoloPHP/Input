@@ -1,6 +1,6 @@
 {
   "name": "solo-input-docs",
-  "version": "1.0.0-RC2",
+  "version": "1.0.0-RC3",
   "type": "module",
   "description": "Documentation for Solo Input",
   "scripts": {

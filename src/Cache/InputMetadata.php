@@ -29,6 +29,7 @@ final readonly class InputMetadata
      * @param array<string, class-string<GeneratorInterface>> $generated     `#[Generator]` property → generator
      * @param array<string, string>                           $postProcessed Post-processed property → handler
      * @param array<string, list<string>>                     $groups        `#[Group]` name → member property names
+     * @param bool                                            $partial       `toArray()` defaults to the provided fields
      */
     public function __construct(
         public string $className,
@@ -37,6 +38,7 @@ final readonly class InputMetadata
         public array $generated,
         public array $postProcessed,
         public array $groups,
+        public bool $partial = false,
     ) {
         $this->names = array_fill_keys(array_keys($properties), true);
     }

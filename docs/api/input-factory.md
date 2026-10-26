@@ -117,12 +117,14 @@ Registers a normalizer, caster, post-processor or generator instance; it takes p
 ### toArray()
 
 ```php
-public static function toArray(object $input, bool $onlyProvided = false): array
+public static function toArray(object $input, ?bool $onlyProvided = null): array
 ```
 
 The fields as an array in declaration order, `#[Exclude]` ones left out. A nested input DTO — in a field or a list — becomes an array too. Exporting does not replace DTOs in the original arrays, including entries held by reference; array keys are preserved.
 
 With `onlyProvided: true`, only the fields the request supplied — the change set of a PATCH. It applies to the nested DTOs and `#[Items]` the factory built; a DTO the application passed in `context` is a value supplied as a whole.
+
+Without the argument, the class decides: one marked [`#[Input(partial: true)]`](/api/field-attribute) gives the change set — nothing, for a DTO the factory did not build — and any other class every field. Nested DTOs follow the call they are in.
 
 ```php
 // PATCH /products/5  {"name": "Desk", "note": null}
@@ -130,6 +132,10 @@ $input = $factory->fromBody(UpdateProductInput::class, $request, route: ['id' =>
 
 Inputs::toArray($input);                      // ['id' => 5, 'name' => 'Desk', 'note' => null, 'price' => null, ...]
 Inputs::toArray($input, onlyProvided: true);  // ['id' => 5, 'name' => 'Desk', 'note' => null]
+
+// The same input class marked #[Input(partial: true)]:
+Inputs::toArray($input);                      // ['id' => 5, 'name' => 'Desk', 'note' => null]
+Inputs::toArray($input, onlyProvided: false); // ['id' => 5, 'name' => 'Desk', 'note' => null, 'price' => null, ...]
 ```
 
 ### provided()

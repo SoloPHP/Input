@@ -16,6 +16,12 @@ use Attribute;
  * input class is an input class too: its constructor may pass inherited
  * fields to `parent::__construct()`.
  *
+ * `partial: true` marks the body of a partial update. An absent field still
+ * reads as its default, but `Inputs::toArray()` leaves it out unless asked
+ * for every field: the array is the change set, so a default never
+ * overwrites what is stored. A subclass without a marker of its own keeps
+ * the flag; one with `#[Input]` decides for itself.
+ *
  * Example:
  * ```php
  * #[Input]
@@ -29,9 +35,25 @@ use Attribute;
  *     ) {
  *     }
  * }
+ *
+ * #[Input(partial: true)]
+ * final readonly class UpdateProductInput
+ * {
+ *     public function __construct(
+ *         #[Validate('string|max:255')]
+ *         public ?string $name = null,
+ *         #[Validate('nullable|string')]
+ *         public ?string $note = null,
+ *     ) {
+ *     }
+ * }
  * ```
  */
 #[Attribute(Attribute::TARGET_CLASS)]
 final class Input
 {
+    public function __construct(
+        public bool $partial = false,
+    ) {
+    }
 }

@@ -215,7 +215,33 @@ final class MetadataBuilder
             }
         }
 
-        return new InputMetadata($className, $properties, $reflection, $generated, $postProcessed, $groups);
+        return new InputMetadata(
+            $className,
+            $properties,
+            $reflection,
+            $generated,
+            $postProcessed,
+            $groups,
+            self::isPartial($reflection),
+        );
+    }
+
+    /**
+     * What the nearest `#[Input]` of the class or its parents says: a
+     * subclass with a marker of its own decides for itself.
+     *
+     * @param ReflectionClass<object> $class
+     */
+    private static function isPartial(ReflectionClass $class): bool
+    {
+        for ($current = $class; $current !== false; $current = $current->getParentClass()) {
+            $input = $current->getAttributes(Input::class)[0] ?? null;
+            if ($input !== null) {
+                return $input->newInstance()->partial;
+            }
+        }
+
+        return false;
     }
 
     /**
