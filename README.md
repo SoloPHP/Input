@@ -96,7 +96,7 @@ Inputs::toArray($input); // ['id' => …, 'name' => …, 'price' => …, 'update
 | `#[FromRoute(?string $key = null)]` | Read from the `$route` argument (URL path params) |
 | `#[FromContext(string $key)]` | Read from the `$context` argument (auth user, tenant, …) |
 | `#[FromBody(string $path)]` | Read from a nested body path (`customer.id`); flat keys may also be remapped this way |
-| `#[Cast('int'\|'float'\|'bool'\|'string'\|'array'\|'json')]` | Explicit cast (union / `mixed` fields); `json` encodes into a string |
+| `#[Cast('int'\|'float'\|'bool'\|'string'\|'array'\|'json'\|'decimal')]` | Explicit cast (union / `mixed` fields); `json` encodes into a string, `decimal` writes a number into one in plain notation |
 | `#[DateFormat('Y-m-d')]` | Fixed input format for a date field — the class follows the type |
 | `#[Caster(MoneyCaster::class)]` | Custom `CasterInterface` implementation |
 | `#[EmptyToNull]` | A blank string is no value — `null`, the default or `required` (field or class) |

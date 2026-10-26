@@ -29,7 +29,7 @@ For values that don't fit the four bags (Body, Query, Route, Context) — reques
 | Attribute | Purpose |
 |---|---|
 | `#[Validate('rules')]` | Validation rules passed to your `ValidatorInterface` |
-| `#[Cast('int'\|'float'\|'bool'\|'string'\|'array'\|'json')]` | Explicit cast for union / `mixed` properties; `json` encodes into a string |
+| `#[Cast('int'\|'float'\|'bool'\|'string'\|'array'\|'json'\|'decimal')]` | Explicit cast for union / `mixed` properties; `json` encodes into a string, `decimal` writes a number into one in plain notation |
 | `#[DateFormat('Y-m-d')]` | Fixed input format for a date property (class from the type) |
 | `#[Caster(MoneyCaster::class)]` | Custom `CasterInterface` implementation |
 | `#[EmptyToNull]` | A blank string is no value (`null` / default / `required`); also on a class |
@@ -118,7 +118,7 @@ See [Validation](/features/validation).
 
 Without either attribute, casting is driven by the property's declared type: `int`, `float`, `bool`, `string`, `array`, the DateTime family and backed enums.
 
-`#[Cast]` takes the built-in types only — `int`, `float`, `bool`, `string`, `array`, and `json` to encode structured input into a string — and is needed only where the type does not imply the cast. Dates follow their type; `#[DateFormat]` fixes the input format. Passing a class name throws `ConfigurationException::castExpectsBuiltInType` — use `#[Caster]` for custom logic.
+`#[Cast]` takes the built-in types only — `int`, `float`, `bool`, `string`, `array`, `json` to encode structured input into a string, and `decimal` to write a number into one in plain decimal notation — and is needed only where the type does not imply the cast. Dates follow their type; `#[DateFormat]` fixes the input format. Passing a class name throws `ConfigurationException::castExpectsBuiltInType` — use `#[Caster]` for custom logic.
 
 ```php
 #[Cast('float')]

@@ -58,12 +58,13 @@ final class MetadataBuilder
      * narrow into an int one; `mixed` accepts every cast.
      */
     private const array CAST_COMPATIBILITY = [
-        'int'    => ['int', 'float'],
-        'float'  => ['float'],
-        'bool'   => ['bool'],
-        'string' => ['string'],
-        'array'  => ['array', 'iterable'],
-        'json'   => ['string'],
+        'int'     => ['int', 'float'],
+        'float'   => ['float'],
+        'bool'    => ['bool'],
+        'string'  => ['string'],
+        'array'   => ['array', 'iterable'],
+        'json'    => ['string'],
+        'decimal' => ['string'],
     ];
 
     /**
@@ -657,8 +658,9 @@ final class MetadataBuilder
 
     /**
      * The validation error reported when a built-in cast cannot convert
-     * non-empty input — named like the validator rule for that type. Null for
-     * an array or iterable cast, which accepts any input.
+     * non-empty input — named like the validator rule for that type. Null
+     * without a built-in cast, and for an array or iterable one, which
+     * accepts any input.
      *
      * @param class-string<BackedEnum>|null $enumClass
      * @return array{rule: string, params?: list<string>}|null
@@ -680,7 +682,10 @@ final class MetadataBuilder
         return match ($effectiveCastType) {
             'int', 'float', 'bool', 'string' => ['rule' => self::TYPE_RULES[$effectiveCastType]],
             'json' => ['rule' => 'json'],
-            default => null, // array / iterable read any input
+            'decimal' => ['rule' => 'numeric'],
+            null, 'array', 'iterable' => null,
+            // A cast with no error here would let the input it rejects through as null.
+            default => throw new \LogicException("Cast type '{$effectiveCastType}' has no cast failure."),
         };
     }
 
@@ -827,7 +832,7 @@ final class MetadataBuilder
      * Dates are resolved separately (`resolveDateClass`).
      *
      * - explicit `#[Caster(...)]`              → [null, null] — the caster decides
-     * - explicit `#[Cast('int'|…|'json')]`    → [castType, null]
+     * - explicit `#[Cast('int'|…|'decimal')]` → [castType, null]
      * - no attribute, built-in property type   → [propertyType, null]
      * - no attribute, `iterable`               → ['iterable', null]
      * - no attribute, BackedEnum property type → [null, enumClass]
@@ -850,7 +855,8 @@ final class MetadataBuilder
             return [$castType, null];
         }
 
-        if ($propertyType !== null && BuiltInCaster::isBuiltIn($propertyType)) {
+        // A class type is never a cast, though it may be named one (`json`, `decimal`).
+        if ($propertyType !== null && $classType === null && BuiltInCaster::isBuiltIn($propertyType)) {
             return [$propertyType, null];
         }
 

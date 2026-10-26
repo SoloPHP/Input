@@ -113,6 +113,22 @@ final class InputFactoryTest extends TestCase
         }
     }
 
+    public function testDecimalCastWritesAPlainDecimalString(): void
+    {
+        $rate = fn(mixed $input) => $this->factory->fromArray(DecimalInput::class, ['rate' => $input])->rate;
+        $this->assertSame('0.00001', $rate(0.00001));
+        $this->assertSame('0.00001', $rate('1e-5'));
+        $this->assertSame('41.5', $rate('41.50'));
+        $this->assertNull($rate(''));
+
+        try {
+            $rate('abc');
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertSame(['rate' => [['rule' => 'numeric']]], $e->getErrors());
+        }
+    }
+
     public function testIterableIsCastLikeAnArray(): void
     {
         $cases = [
@@ -445,6 +461,7 @@ final class InputFactoryTest extends TestCase
         yield 'two sources' => [FromBodyAndRouteConflictInput::class, 'multiple source attributes'];
         yield 'class name in #[Cast]' => [CastWithClassInput::class, "#[Cast('Solo"];
         yield 'unknown cast type' => [UnknownCastInput::class, 'which is neither a built-in type'];
+        yield 'decimal cast on an int' => [DecimalCastOnIntInput::class, "cast type 'decimal'", "type 'int'"];
         yield '#[Cast] with #[Caster]' => [CastAndCasterConflictInput::class, 'has both #[Cast] and #[Caster]'];
         yield '#[Generator] with a source' => [GeneratorWithFromRouteInput::class, 'FromRoute'];
         yield '#[Items] with #[Cast]' => [ItemsWithCastInput::class, 'Items', 'Cast'];
@@ -746,6 +763,16 @@ final class CastWithClassInput
 }
 
 #[Input]
+final class DecimalCastOnIntInput
+{
+    public function __construct(
+        #[Cast('decimal')]
+        public int $value = 0,
+    ) {
+    }
+}
+
+#[Input]
 final class UnknownCastInput
 {
     public function __construct(
@@ -1036,6 +1063,16 @@ final class TermsInput
     public function __construct(
         public true $accepted,
         public string|false $nickname = false,
+    ) {
+    }
+}
+
+#[Input]
+final class DecimalInput
+{
+    public function __construct(
+        #[Cast('decimal')]
+        public ?string $rate = null,
     ) {
     }
 }

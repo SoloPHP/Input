@@ -10,7 +10,9 @@ use InvalidArgumentException;
 /**
  * Explicit cast for the property value: `int`, `float`, `bool`, `string`,
  * `array` — or `json`, which encodes a structured input (an object or list)
- * into a `string` property instead of rejecting it.
+ * into a `string` property instead of rejecting it, and `decimal`, which
+ * writes a number into a `string` property in plain decimal notation
+ * (`0.00001` and `'1e-5'` as `'0.00001'`).
  *
  * Without this attribute, casting is driven by the property's declared type
  * (e.g. `public int $age` is cast as int), so `#[Cast]` is only needed where

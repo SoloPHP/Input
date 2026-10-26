@@ -22,9 +22,10 @@ final class BuiltInCaster
     /**
      * Built-in cast types: the `#[Cast]` vocabulary and the type-driven casts
      * of `int` / `float` / `bool` / `string` / `array` properties. `json`
-     * (explicit only) encodes a structured value into a string property.
+     * (explicit only) encodes a structured value into a string property, and
+     * `decimal` (explicit only) writes a number into one in plain notation.
      */
-    public const array CAST_TYPES = ['int', 'float', 'bool', 'string', 'array', 'json'];
+    public const array CAST_TYPES = ['int', 'float', 'bool', 'string', 'array', 'json', 'decimal'];
 
     /**
      * What cast() returns for `""` by type — kept as data, so a property's
@@ -37,6 +38,7 @@ final class BuiltInCaster
         'string'   => '',
         'array'    => [],
         'json'     => '',
+        'decimal'  => null,
         'iterable' => [],
     ];
 
@@ -71,8 +73,8 @@ final class BuiltInCaster
      * Convert `$value` to `$type` without losing information — or return null
      * when it cannot be: `'12abc'` is no int, `['5']` no float, `true` no
      * number, `'maybe'` no bool. `""` reads as `BLANK` says: null for int /
-     * float / bool — no value to the client, no fit for the application — a
-     * string keeps it, an array reads it as `[]`.
+     * float / bool / decimal — no value to the client, no fit for the
+     * application — a string keeps it, an array reads it as `[]`.
      */
     public function cast(string $type, mixed $value): mixed
     {
@@ -87,6 +89,7 @@ final class BuiltInCaster
             'string' => $this->toString($value),
             'array' => $this->toArray($value),
             'json' => $this->toJson($value),
+            'decimal' => $this->toDecimal($value),
             // Type-driven only (no #[Cast]): an iterable already fits — a
             // generator or cursor is kept, not consumed — the rest is read
             // like an array.
@@ -263,6 +266,69 @@ final class BuiltInCaster
             is_int($value), $value instanceof \Stringable => (string) $value,
             default => null,
         };
+    }
+
+    /**
+     * A number in plain decimal notation — an optional `-`, digits, and a
+     * fraction only when it is not zero: what a DECIMAL column, bcmath or a
+     * decimal library takes, and what `(string) 0.00001`, `'1.0E-5'`, is not.
+     *
+     * An int or a numeric string keeps every digit it has; a float gives its
+     * shortest round-trip digits, so `0.1` stays `'0.1'`. The notation changes,
+     * never the value: `'+5'`, `'005'` and `'5.0'` all read as `'5'`, and
+     * `'-0'` as `'0'`. A number a float overflows to infinity, or rounds to
+     * zero although it is not zero, is none.
+     */
+    private function toDecimal(mixed $value): ?string
+    {
+        return match (true) {
+            is_int($value) => (string) $value,
+            // `%H` at precision -1 writes the shortest digits that read back as
+            // the same float, with a `.` whatever the locale or the ini settings.
+            is_float($value) => is_finite($value) ? self::plainDecimal(sprintf('%.*H', -1, $value)) : null,
+            is_string($value), $value instanceof \Stringable => self::plainDecimal((string) $value),
+            default => null,
+        };
+    }
+
+    /**
+     * A numeric string — blanks around, a sign, digits with an optional
+     * fraction, an optional exponent — rewritten without the exponent by
+     * moving the point along its digits, so none of them is lost to a float.
+     * The quantifiers are possessive: a run of blanks split between the two
+     * `\s*` again and again would cost quadratic time.
+     */
+    private static function plainDecimal(string $number): ?string
+    {
+        if (preg_match('/\A\s*+([+-]?)(\d*+)(?:\.(\d*+))?(?:[eE]([+-]?\d++))?\s*+\z/', $number, $parts) !== 1) {
+            return null;
+        }
+        $digits = $parts[2] . ($parts[3] ?? '');
+        if ($digits === '') {
+            return null;
+        }
+        if (ltrim($digits, '0') === '') {
+            return '0';
+        }
+        // A float's range, not a column's precision: past it — infinity, or
+        // zero for a number that is not — there is no number. That bounds how
+        // far the point moves, so a short input cannot expand without limit
+        // ('1e-99999999' would be a hundred million characters).
+        $float = (float) $number;
+        if ($float === 0.0 || !is_finite($float)) {
+            return null;
+        }
+
+        $point = strlen($parts[2]) + (int) ($parts[4] ?? 0);
+        // Zeros before the digits for a point left of them, after them for one right of them.
+        $digits = str_repeat('0', max(0, -$point)) . str_pad($digits, $point, '0');
+        $point = max(0, $point);
+        $integer = ltrim(substr($digits, 0, $point), '0');
+        $fraction = rtrim(substr($digits, $point), '0');
+
+        return ($parts[1] === '-' ? '-' : '')
+            . ($integer === '' ? '0' : $integer)
+            . ($fraction === '' ? '' : '.' . $fraction);
     }
 
     private function toJson(mixed $value): ?string

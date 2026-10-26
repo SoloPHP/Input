@@ -49,6 +49,7 @@ A value that cannot become the declared type is reported in the `ValidationExcep
 |-------|-------|
 | Not an integer for an `int` property (`"12abc"`, `"1.5"`, `[5]`) | `['rule' => 'integer']` |
 | Not a number for a `float` property (`"9,99"`, `[1.5]`) | `['rule' => 'numeric']` |
+| Not a number for `#[Cast('decimal')]` (`"abc"`, `"1e400"`) | `['rule' => 'numeric']` |
 | Not a boolean form for a `bool` property (`"maybe"`, `2`) | `['rule' => 'boolean']` |
 | An array, object or boolean for a `string` property | `['rule' => 'string']` |
 | Unparseable date, no format | `['rule' => 'date']` |
@@ -58,7 +59,7 @@ A value that cannot become the declared type is reported in the `ValidationExcep
 
 The `int`, `float` and `bool` casts accept the forms the `integer`, `numeric` and `boolean` rules of [solophp/validator](https://github.com/solophp/validator) accept — except that a JSON `true` / `false` is never a number — and report the same error codes. So the type alone already rejects `"12abc"`; a matching rule in `#[Validate]` stays harmless.
 
-An empty string keeps its meaning "no value": it becomes `null` for `int`, `float`, `bool`, DateTime and enum properties — `null` on a nullable property, the default on one that has a default, and the `required` error otherwise. A field that already failed validation is not cast, so it reports the validator's error only.
+An empty string keeps its meaning "no value": it becomes `null` for `int`, `float`, `bool`, DateTime and enum properties, and under `#[Cast('decimal')]` — `null` on a nullable property, the default on one that has a default, and the `required` error otherwise. A field that already failed validation is not cast, so it reports the validator's error only.
 
 An array for a `string` property is a `string` error — including a `#[FromBody]` dot-path that stops at a sub-object. To store structured input in a string property (a JSON column, say), declare [`#[Cast('json')]`](#json). A normalizer can prepare the raw value, or a custom caster can explicitly convert it; a post-processor receives the decoded value.
 
@@ -66,7 +67,7 @@ Values the application supplies — `#[FromContext]` and generators — are not 
 
 ## Explicit Casting (`#[Cast]`)
 
-Use `#[Cast]` when the declared type does not say what to produce — a union or `mixed` property — or to JSON-encode into a string. It accepts `int`, `float`, `bool`, `string`, `array` and `json` (the 3.x aliases `integer`, `double`, `boolean` are gone); dates are cast by their type, see [Dates](#dates):
+Use `#[Cast]` when the declared type does not say what to produce — a union or `mixed` property — to JSON-encode into a string, or to write a number into one in plain decimal notation. It accepts `int`, `float`, `bool`, `string`, `array`, `json` and `decimal` (the 3.x aliases `integer`, `double`, `boolean` are gone); dates are cast by their type, see [Dates](#dates):
 
 ```php
 use Solo\Input\Attributes\Cast;
@@ -79,6 +80,9 @@ public mixed $payload = null,
 
 #[Cast('json')]
 public ?string $settings = null,   // ['theme' => 'dark'] → '{"theme":"dark"}'
+
+#[Cast('decimal')]
+public string $rate = '1',         // 0.00001 → '0.00001'
 ```
 
 ---
@@ -121,6 +125,8 @@ Strings follow `FILTER_VALIDATE_INT`: digits with an optional sign — no fracti
 | A `Stringable` object | its string |
 | An array, `true` / `false`, any other object | `string` error |
 
+A float is written the way PHP writes it: rounded to the 14 significant digits of the `precision` setting, and in exponent notation when very small or large — `0.1 + 0.2` as `"0.3"`, `0.00001` as `"1.0E-5"`. For a number meant for a DECIMAL column or bcmath, use [`#[Cast('decimal')]`](#decimal).
+
 ### JSON
 
 Only by `#[Cast('json')]`, on a `string` (or untyped / `mixed`) property:
@@ -132,6 +138,28 @@ Only by `#[Cast('json')]`, on a `string` (or untyped / `mixed`) property:
 | `true`, `5` | `'true'`, `'5'` |
 
 A string is not checked to be valid JSON — add a validation rule of your own if it must be.
+
+### Decimal
+
+Only by `#[Cast('decimal')]`, on a `string` (or untyped / `mixed`) property. It writes a number in plain decimal notation — what a DECIMAL column, bcmath or a decimal library takes:
+
+```php
+#[Validate('required|numeric|min_value:0')]
+#[Cast('decimal')]
+public string $rate,   // 0.00001 → '0.00001', '1e-5' → '0.00001'
+```
+
+| Input | Result |
+|-------|--------|
+| `5`, `"+5"`, `"005"`, `"5.0"` | `"5"` |
+| `0.00001`, `"1e-5"`, `"1.0E-5"` | `"0.00001"` |
+| `41.25`, `"41.250"` | `"41.25"` |
+| `"12345678901234567890.123456789"` | kept digit for digit |
+| `-0.0`, `"-0.000"` | `"0"` |
+| `""` | no value — `null`, the default, or `required` |
+| `"abc"`, `"1,5"`, `true`, an array, `"1e400"`, `"1e-400"` | `numeric` error |
+
+The notation changes, never the value. A string keeps every digit it has. A float gives its shortest round-trip digits, so `0.1` stays `"0.1"`. Precision and scale remain the column's to enforce: they differ by column and by database, so `"1e308"` passes as its 309 digits. The range is a float's: a number a float would overflow to infinity, or round to zero although it is not zero, is a `numeric` error. That bounds how far the point moves, so a short input cannot expand without limit — `"1e-99999999"` would be a hundred million characters.
 
 ### Array
 
@@ -287,6 +315,7 @@ Empty string `""` is handled per type:
 | Type | `""` Result | Reason |
 |------|-------------|--------|
 | `int`, `float`, `bool` | no value | Not a number / boolean |
+| `#[Cast('decimal')]` | no value | Not a number |
 | date types, enums | no value — the case, for an enum with a `""` case | Not a date / case |
 | a custom-cast class | no value | No class holds a string |
 | `string` | `""` | Preserved as-is |

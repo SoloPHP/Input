@@ -285,7 +285,7 @@ $own = Filter::all(Criteria::of($dto), ['customer_id' => $customerId]);
 A criteria key chooses the field and the operator, so build every key from fixed strings: `mapTo`, a processor's literals or its `config`. An associative array is merged by its keys as they are — never copy request keys into one, or `filter[price >=]=0` turns an equality into a comparison. When users choose the fields to filter by, map each allowed name to a fixed key.
 :::
 
-Solo Repository checks each value against its field type before SQL and throws `InvalidArgumentException` for one such as `'12x'` for an integer. Type filter fields like the columns they filter — `int`, a decimal string, a date — so malformed input is a validation error before it reaches the repository.
+Solo Repository checks each value against its field type before SQL and throws `InvalidArgumentException` for one such as `'12x'` for an integer. Type filter fields like the columns they filter — `int`, a [decimal string](/features/type-casting#decimal), a date — so malformed input is a validation error before it reaches the repository.
 
 ---
 
