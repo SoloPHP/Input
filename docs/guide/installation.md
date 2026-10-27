@@ -12,12 +12,8 @@
 Install the package via Composer:
 
 ```bash
-composer require 'solophp/input:^1.0@RC'
+composer require solophp/input
 ```
-
-::: warning Release candidate
-1.0 is a release candidate: the API may still change before 1.0.0.
-:::
 
 ## Dependencies
 
@@ -50,6 +46,10 @@ use Solo\Validator\Validator;
 
 $factory = new InputFactory(new Validator());
 ```
+
+## Versioning
+
+Solo Input follows semantic versioning. Its public API is what you write against: `InputFactory`, `Inputs`, the attributes, the contracts (`NormalizerInterface`, `CasterInterface`, `PostProcessorInterface`, `GeneratorInterface`), `ProcessContext`, `FieldSource` and the exceptions. Classes marked `@internal` — metadata, the pipeline, the built-in caster, the group and schema builders — are implementation details and may change in any release.
 
 ## Next Steps
 
