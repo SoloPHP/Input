@@ -14,7 +14,7 @@ hero:
       link: /guide/installation
     - theme: alt
       text: View on GitHub
-      link: https://github.com/solophp/input
+      link: https://github.com/SoloPHP/Input
 
 features:
   - icon: 🧱
@@ -95,9 +95,7 @@ $input->stock;     // int — 0 when the client left it out
 ## Installation
 
 ```bash
-composer require 'solophp/input:^1.0@RC'
+composer require solophp/input
 ```
-
-1.0 is a release candidate: the API may still change before 1.0.0.
 
 **Requirements:** PHP 8.3+, a PSR-7 implementation, a validator implementing `Solo\Contracts\Validator\ValidatorInterface`.

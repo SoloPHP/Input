@@ -20,13 +20,13 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/installation' },
       { text: 'Features', link: '/features/field-attribute' },
       { text: 'API', link: '/api/input-factory' },
-      { text: 'v1.0.0-RC3', link: 'https://github.com/solophp/input/releases' },
+      { text: 'v1.0.0', link: 'https://github.com/SoloPHP/Input/releases' },
       {
         text: 'Links',
         items: [
-          { text: 'GitHub', link: 'https://github.com/solophp/input' },
+          { text: 'GitHub', link: 'https://github.com/SoloPHP/Input' },
           { text: 'Packagist', link: 'https://packagist.org/packages/solophp/input' },
-          { text: 'SoloPHP', link: 'https://github.com/solophp' }
+          { text: 'SoloPHP', link: 'https://github.com/SoloPHP' }
         ]
       }
     ],
@@ -64,12 +64,12 @@ export default defineConfig({
     ],
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/solophp/input' }
+      { icon: 'github', link: 'https://github.com/SoloPHP/Input' }
     ],
 
     footer: {
       message: 'Released under the MIT License.',
-      copyright: `Copyright © 2025-${new Date().getFullYear()} SoloPHP`
+      copyright: 'Copyright © 2026 SoloPHP'
     },
 
     search: {
@@ -77,7 +77,7 @@ export default defineConfig({
     },
 
     editLink: {
-      pattern: 'https://github.com/solophp/input/edit/main/docs/:path',
+      pattern: 'https://github.com/SoloPHP/Input/edit/main/docs/:path',
       text: 'Edit this page on GitHub'
     }
   }
