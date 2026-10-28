@@ -169,8 +169,8 @@ final readonly class ProfileInput
 #[Validate('nullable|email')]
 public string $email,
 
-// ✅ Make the type nullable
-#[Validate('nullable|email')]
+// ✅ Make the type nullable — it accepts null without the rule
+#[Validate('email')]
 public ?string $email = null,
 ```
 

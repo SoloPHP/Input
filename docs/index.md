@@ -28,7 +28,7 @@ features:
     details: Driven by the declared type — int, float, bool, string, array, DateTime, backed enums and custom casters. "12abc" for an int is a validation error, not 12.
   - icon: ✅
     title: All errors at once
-    details: Rules go verbatim to your ValidatorInterface; a field without a default that the input lacks fails required. Errors come back together, keyed by the input path — address.city, lines.0.qty.
+    details: Rules go to your ValidatorInterface; a field sent with no value is checked by presence rules alone, and one without a default that the input lacks fails required. Errors come back together, keyed by the input path — address.city, lines.0.qty.
   - icon: 🔧
     title: Processing stages
     details: 'Normalize raw input, cast it to the declared type, post-process decoded values, generate the rest — each with its own focused attribute.'

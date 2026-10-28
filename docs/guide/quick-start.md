@@ -23,7 +23,7 @@ final readonly class CreateProductInput
         public float $price,
         #[Validate('integer|min_value:0')]
         public int $stock = 0,
-        #[Validate('nullable|string')]
+        #[Validate('string')]
         public ?string $description = null,
     ) {
     }
@@ -87,8 +87,8 @@ public string $username,
 // Required, but may be null: the key must be sent
 public ?string $nickname,
 
-// Optional: absent takes the default
-#[Validate('nullable|string')]
+// Optional: absent or null, it is null
+#[Validate('string')]
 public ?string $bio = null,
 
 #[Validate('integer')]

@@ -23,16 +23,30 @@ final class ProcessingStagesTest extends TestCase
         $this->factory = new InputFactory(new RawValidator());
     }
 
-    public function testBlankCustomCastingRespectsStringAndCollectionPolicies(): void
+    public function testACasterGetsABlankOnlyWhereItsTypeHoldsAString(): void
     {
         $dto = $this->factory->fromArray(BlankCustomInput::class, [
-            'text' => '', 'anything' => '', 'list' => '', 'iterable' => '',
+            'text' => '', 'anything' => '', 'list' => [], 'iterable' => [],
         ]);
         self::assertSame('', $dto->text);
         self::assertSame('', $dto->anything);
         self::assertSame([], $dto->list);
-        self::assertSame([], $dto->iterable);
-        self::assertSame(['cast', 'cast', 'post', 'post', 'post', 'post'], Trace::$stages);
+        self::assertSame(['cast', 'cast', 'cast', 'cast', 'post', 'post', 'post', 'post'], Trace::$stages);
+
+        // A list holds no "": it is no value, and the caster never sees it.
+        Trace::$stages = [];
+        try {
+            $this->factory->fromArray(BlankCustomInput::class, [
+                'text' => 'a', 'anything' => 'b', 'list' => '', 'iterable' => '',
+            ]);
+            self::fail('Expected validation failure');
+        } catch (ValidationException $e) {
+            self::assertSame(
+                ['list' => [['rule' => 'required']], 'iterable' => [['rule' => 'required']]],
+                $e->getErrors(),
+            );
+        }
+        self::assertSame(['cast', 'cast'], Trace::$stages);
     }
 
     public function testSparseItemErrorPathsKeepOriginalKeysAndPreventFinalization(): void

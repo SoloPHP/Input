@@ -125,13 +125,13 @@ A field rejection on `#[FromContext]` becomes `UnexpectedValueException`: the ap
 |---|---|
 | Key absent | No normalizer, caster or post-processor; the existing required/default rules apply |
 | Key present as null or empty string | Normalizer runs |
-| Null after normalization | No caster; nullable property gets null, otherwise use its default or report `required` |
+| Null after normalization | Only presence rules check it; no caster; nullable property gets null, otherwise use its default or report `required` |
 | Null after decoding | No post-processor |
 | Non-null default selected for a present field | Post-processor receives the default |
 | Default left untouched because a key was absent | No post-processor; `provided()` does not include it |
 | Caster/post-processor returns null | Accepted only by a nullable property; no default fallback |
 
-Without `#[EmptyToNull]`, empty strings follow the property's [empty-value policy](/features/type-casting#null-and-empty-string-handling). For a custom caster, `""` is passed through for a string/mixed-compatible property, becomes an empty array for an array/iterable property, and otherwise means no value. Casters are bypassed when this policy selects no value or an empty array. The final value is still type-checked. Context `""` remains an actual value rather than client absence.
+Without `#[EmptyToNull]`, empty strings follow the property's [empty-value policy](/features/type-casting#null-and-empty-string-handling). For a custom caster, `""` is passed through for a string/mixed-compatible property and otherwise means no value: the caster is bypassed, and only presence rules check the field. The final value is still type-checked. Context `""` remains an actual value rather than client absence.
 
 ## Nested DTOs and Finalization
 

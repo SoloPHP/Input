@@ -18,7 +18,7 @@ final class Input
 
 Marks an input class. `InputFactory` builds it through its constructor, a field typed with it is a nested DTO, and `#[Items]` accepts it. Its constructor parameters are its fields: each needs a public property of the same name — promoted, or inherited from a parent constructor. A field with a default is optional; one without fails `required` when absent. The marker on a parent class applies to its subclasses. Building a class without it throws `ConfigurationException::notAnInput`.
 
-`partial: true` marks the body of a partial update (PATCH). An absent field still reads as its default, but [`Inputs::toArray()`](/api/input-factory#toarray) leaves it out unless called with `onlyProvided: false` — the array is the change set, so a default never overwrites what is stored. A subclass without a marker of its own keeps the parent's flag; one with `#[Input]` decides for itself.
+`partial: true` marks the body of a partial update (PATCH). An absent field still reads as its default, but [`Inputs::toArray()`](/api/input-factory#toarray) leaves it out unless called with `onlyProvided: false` — the array is the change set, so a default never overwrites what is stored. A subclass without a marker of its own keeps the parent's flag; one with `#[Input]` decides for itself. A `null` clears a nullable field; `filled` in its rules keeps one from being cleared.
 
 ---
 
@@ -124,7 +124,7 @@ Custom caster — `$class` must implement `CasterInterface`. A missing or non-im
 final class EmptyToNull {}
 ```
 
-A blank string (`""` or only whitespace, also with auto-trim off) becomes `null` after normalization and before validation: the field is then `null` when nullable, its default when it has one, and a `required` error otherwise. Non-string input is untouched. On a class, it applies to every field of the class and of its subclasses that the client sends — `#[FromContext]` and generated ones aside. Combining it with `#[Generator]` throws `ConfigurationException::generatorConflict`.
+A blank string (`""` or only whitespace, also with auto-trim off) becomes `null` after normalization and before validation: it is then [no value](/features/validation#no-value), checked by presence rules alone, and the field is `null` when nullable, its default when it has one, and a `required` error otherwise. Non-string input is untouched. On a class, it applies to every field of the class and of its subclasses that the client sends — `#[FromContext]` and generated ones aside. Combining it with `#[Generator]` throws `ConfigurationException::generatorConflict`.
 
 ### `#[NoTrim]`
 

@@ -59,7 +59,7 @@ A value that cannot become the declared type is reported in the `ValidationExcep
 
 The `int`, `float` and `bool` casts accept the forms the `integer`, `numeric` and `boolean` rules of [solophp/validator](https://github.com/solophp/validator) accept — except that a JSON `true` / `false` is never a number — and report the same error codes. So the type alone already rejects `"12abc"`; a matching rule in `#[Validate]` stays harmless.
 
-An empty string keeps its meaning "no value": it becomes `null` for `int`, `float`, `bool`, DateTime and enum properties, and under `#[Cast('decimal')]` — `null` on a nullable property, the default on one that has a default, and the `required` error otherwise. A field that already failed validation is not cast, so it reports the validator's error only.
+An empty string keeps its meaning "no value" for `int`, `float`, `bool`, DateTime, enum and list properties, and under `#[Cast('decimal')]`: it reaches the validator as `null`, so only presence rules check it — an `integer` or `boolean` rule does not reject `?page=`. It becomes `null` on a nullable property, the default on one that has a default, and the `required` error otherwise. A field that already failed validation is not cast, so it reports the validator's error only.
 
 An array for a `string` property is a `string` error — including a `#[FromBody]` dot-path that stops at a sub-object. To store structured input in a string property (a JSON column, say), declare [`#[Cast('json')]`](#json). A normalizer can prepare the raw value, or a custom caster can explicitly convert it; a post-processor receives the decoded value.
 
@@ -168,7 +168,7 @@ Smart conversion logic:
 1. **JSON**: Valid JSON array/object is decoded
 2. **CSV**: Comma-separated string is split
 3. **Single**: Non-empty string wrapped in array
-4. **Empty**: Empty string becomes `[]`
+4. **Empty**: a client's empty string is [no value](/features/validation#no-value); one the application passes becomes `[]`
 5. **Traversable** (a value from context, say a generator): its items
 
 | Input | Result |
@@ -176,7 +176,7 @@ Smart conversion logic:
 | `'["a","b"]'` | `["a", "b"]` |
 | `'a, b, c'` | `["a", "b", "c"]` |
 | `'single'` | `["single"]` |
-| `''` | `[]` |
+| `''` | no value — `[]` from the application |
 
 ---
 
@@ -308,7 +308,7 @@ Use `#[Normalize(JsonArrayNormalizer::class)]` before `#[Items]` when the raw in
 
 ## Null and Empty String Handling
 
-`null` remaining after normalization is never cast: a nullable property gets `null`, one with a default keeps its default, and any other property reports `required`.
+`null` remaining after normalization is no value and is never cast: a nullable property gets `null`, one with a default keeps its default, and any other property reports `required`.
 
 Empty string `""` is handled per type:
 
@@ -319,10 +319,10 @@ Empty string `""` is handled per type:
 | date types, enums | no value — the case, for an enum with a `""` case | Not a date / case |
 | a custom-cast class | no value | No class holds a string |
 | `string` | `""` | Preserved as-is |
-| `array`, an `#[Items]` list | `[]` | Empty collection |
+| `array`, an `#[Items]` list | no value | No list — the empty one is `[]` |
 | a nested DTO | no value | No object |
 
-"No value" means `null` on a nullable property, the default on one that has a default, and the `required` error otherwise. [`#[EmptyToNull]`](/features/field-attribute#emptytonull) extends that to `string` and `array` properties — on one property or a whole class.
+"No value" is checked by [presence rules alone](/features/validation#no-value), then means `null` on a nullable property, the default on one that has a default, and the `required` error otherwise. [`#[EmptyToNull]`](/features/field-attribute#emptytonull) extends that to `string` properties — on one property or a whole class.
 
 ---
 

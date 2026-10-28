@@ -10,6 +10,13 @@ use InvalidArgumentException;
 /**
  * Declares validation rules for a property.
  *
+ * The rules check a value. A field with no value — `null`, or a `""` its type
+ * cannot hold, such as `?page=` for an `int` or a list — reaches the
+ * validator as `null` and is checked by presence rules alone (`required`,
+ * `filled`, `present`, `required_if`…): a nullable field then holds `null`,
+ * one with a default keeps it, any other reports `required`. The type says
+ * whether a field may be null, so it needs no `nullable` rule.
+ *
  * Example:
  * ```php
  * #[Validate('required|string|max:100')]

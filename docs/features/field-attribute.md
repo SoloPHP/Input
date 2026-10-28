@@ -137,14 +137,15 @@ See [Type Casting](/features/type-casting).
 
 ### `#[EmptyToNull]`
 
-Read a blank string — `""` or only whitespace — as no value, after normalization and before validation. A nullable property gets `null`, one with a default keeps it, any other reports `required`. Without it a string property keeps `""`, and "not filled in" ends up in two shapes (`''` and `NULL`) in one column:
+Read a blank string — `""` or only whitespace — as no value, after normalization and before validation. Like any field with [no value](/features/validation#no-value), it is checked by presence rules alone: a nullable property gets `null`, one with a default keeps it, any other reports `required`. Without it a string property keeps `""`, and "not filled in" ends up in two shapes (`''` and `NULL`) in one column:
 
 ```php
 #[EmptyToNull]
-#[Validate('nullable|date:Y-m-d')]
-public ?string $endDate = null,     // "" → null; the validator sees null too
+#[Validate('date:Y-m-d')]
+public ?string $endDate = null,     // "" → null
 
 #[EmptyToNull]
+#[Validate('in:created_at,name')]
 public string $sort = 'created_at', // "" → 'created_at'
 ```
 
@@ -299,7 +300,7 @@ final readonly class UpdateOrderInput
         #[Validate('array|min:1')]
         #[Items(OrderItemInput::class)]
         public array $items,
-        #[Validate('nullable|string|max:500')]
+        #[Validate('string|max:500')]
         // Client strings are auto-trimmed by default.
         public ?string $notes = null,
         #[Validate('in:pending,confirmed')]

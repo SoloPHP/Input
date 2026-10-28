@@ -573,22 +573,16 @@ final class MetadataBuilder
             : null;
         $memberGuard = $memberCast ? $resultGuard : null;
 
-        // Empty input policy is independent of the post-processor.
-        $blank = match (true) {
-            $appSupplied => '',
-            // A caster gets "" or [] where the type holds it; no guard: any type.
-            $customCasterClass !== null => match (true) {
-                $resultGuard?->accepts('') ?? true => '',
-                $resultGuard?->accepts([]) ?? false => [],
-                default => null,
-            },
-            $listItems !== null => [],
-            $enumClass !== null => $this->builtInCaster->castEnum($enumClass, ''),
-            $dateClass !== null => $this->builtInCaster->castDate($dateClass, $dateFormat?->format, ''),
-            $effectiveCastType !== null => BuiltInCaster::BLANK[$effectiveCastType],
-            $memberGuard !== null => $this->builtInCaster->castToMembers($memberGuard, ''),
-            !$holdsInput => null,
-            default => '',
+        // A client's "" is no value where the type cannot hold it, a list's
+        // included: the empty list is []. Independent of the post-processor.
+        $blankIsNoValue = !$appSupplied && match (true) {
+            // A caster gets "" where its type holds it; no guard: any type.
+            $customCasterClass !== null => $resultGuard !== null && !$resultGuard->accepts(''),
+            $listItems !== null, $dateClass !== null => true,
+            $enumClass !== null => $this->builtInCaster->castEnum($enumClass, '') === null,
+            $effectiveCastType !== null => BuiltInCaster::BLANK[$effectiveCastType] !== '',
+            $memberGuard !== null => $this->builtInCaster->castToMembers($memberGuard, '') !== '',
+            default => !$holdsInput,
         };
 
         return new PropertyMetadata(
@@ -630,7 +624,7 @@ final class MetadataBuilder
             resultGuard: $resultGuard,
             memberGuard: $memberGuard,
             producedItems: $appSupplied || $postProcess !== null ? $items?->class : null,
-            blank: $blank,
+            blankIsNoValue: $blankIsNoValue,
         );
     }
 

@@ -17,7 +17,7 @@ final readonly class CreateUserInput
         public string $name,
         #[Validate('required|email')]
         public string $email,
-        #[Validate('nullable|string')]
+        #[Validate('string')]
         public ?string $bio = null,
     ) {
     }
