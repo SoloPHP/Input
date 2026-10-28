@@ -20,7 +20,7 @@ export default defineConfig({
       { text: 'Guide', link: '/guide/installation' },
       { text: 'Features', link: '/features/field-attribute' },
       { text: 'API', link: '/api/input-factory' },
-      { text: 'v1.0.0', link: 'https://github.com/SoloPHP/Input/releases' },
+      { text: 'v1.1.0', link: 'https://github.com/SoloPHP/Input/releases' },
       {
         text: 'Links',
         items: [
@@ -37,7 +37,8 @@ export default defineConfig({
         items: [
           { text: 'Installation', link: '/guide/installation' },
           { text: 'Quick Start', link: '/guide/quick-start' },
-          { text: 'Configuration', link: '/guide/configuration' }
+          { text: 'Configuration', link: '/guide/configuration' },
+          { text: 'Upgrading', link: '/guide/upgrading' }
         ]
       },
       {

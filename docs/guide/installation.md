@@ -23,14 +23,14 @@ composer require solophp/input
         "php": "^8.3",
         "psr/container": "^2.0",
         "psr/http-message": "^2.0",
-        "solophp/contracts": "^1.3"
+        "solophp/contracts": "^1.8"
     }
 }
 ```
 
 ## Validator
 
-The package requires a validator implementing `Solo\Contracts\Validator\ValidatorInterface`. `validate()` gets the rules of every field, also of one the client did not send — its key is then missing from the data, and the validator decides what that means. We recommend [solophp/validator](https://github.com/SoloPHP/Validator), which checks an absent field by its presence rules only:
+The package requires a validator implementing `Solo\Contracts\Validator\ValidatorInterface`. `validate()` gets the rules of every field, also of one the client did not send — its key is then missing from the data, and the validator decides what that means; a field with [no value](/features/validation#no-value) is `null` in it. Since solophp/contracts 1.8 the interface promises that both are checked by presence rules only. We recommend [solophp/validator](https://github.com/SoloPHP/Validator), which keeps that from 4.2:
 
 ```bash
 composer require solophp/validator

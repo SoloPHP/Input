@@ -22,47 +22,88 @@ public int $quantity,
 A field's default decides whether it may be absent: the constructor needs a value for every parameter without one. Such a field that the input lacks fails `required`, with or without a rule saying so — unless the validator already reported it.
 
 ```php
-// Required: must be present and not empty
+// Required: must be sent, with a value
 #[Validate('required|string')]
 public string $username,
 
 // Required by the constructor: absent fails `required`, but null is accepted
-#[Validate('nullable|string')]
+#[Validate('string')]
 public ?string $reason,
 
-// Optional: absent takes the default
+// Optional: absent or null, it is null
 #[Validate('string')]
 public ?string $bio = null,
 
-#[Validate('integer')]
+// Optional: absent or with no value, it is 1
+#[Validate('integer|min_value:1')]
 public int $page = 1,
 ```
 
 PHP expects required parameters before optional ones: declare the fields without defaults first.
 
+## No Value
+
+`null` and `""` are no value — except in a field that holds text, where `""` is the empty text unless [`#[EmptyToNull]`](/features/field-attribute#emptytonull) reads it as no value too. Everything else, `[]` included, is a value.
+
+After normalization the factory reads a `""` the field's type cannot hold as `null`: for `int`, `float`, `bool`, a union without `string`, `#[Cast('decimal')]`, a date, an enum without a `""` case, an `array` or `#[Items]` list, a nested DTO, and any type a custom caster builds that cannot hold a string — a class, an array. The validator checks a `null` like a missing field, by its [presence rules](https://solophp.github.io/Validator/features/rules#presence-rules) alone — `required`, `filled`, `present`, `required_if` and the other `required_*` rules. The field then holds `null` when nullable, its default when it has one, and the `required` error otherwise.
+
+```php
+// GET /tasks?q=&done=  →  $q and $done are null
+#[EmptyToNull]
+#[Validate('string|max:100')]
+public ?string $q = null,
+
+#[Validate('boolean')]
+public ?bool $done = null,
+```
+
+The type says whether a field may be null, so it needs no `nullable` rule. A value goes through every rule: a filled string, `""` for a `string` property, and `[]` — the empty list, which `min:1` refuses. A `""` is no list: `array $tags = []` keeps its default, `?array $tags` is `null`. A custom caster never sees a `""` its type cannot hold.
+
+A field the client may leave out but not clear refuses no value with `filled`, one without a default with `required`:
+
+```php
+#[Input(partial: true)]
+final readonly class UpdateProductInput
+{
+    public function __construct(
+        #[Validate('filled|string|max:255')]
+        public ?string $name = null,   // may be left out; null or "" fails `filled`
+        #[Validate('string|max:1000')]
+        public ?string $note = null,   // null clears it
+    ) {
+    }
+}
+```
+
+A rule of your own runs on a field with no value only if it is a presence rule: solophp/validator calls it for a missing or `null` field only when it implements `PresenceRule`, and never a callback. So `#[Validate('accepted')] public bool $terms = false` takes `false` for `null` or `""`, as it does for a missing key: drop the default and write `required|accepted`.
+
+A `null` the application passes in `#[FromContext]` is no value too: a nullable field gets `null`, one with a default keeps it, and one with neither throws `UnexpectedValueException`, as a missing context key does.
+
+A `nullable` you write keeps working. With solophp/validator it also lets a blank `""` or `[]` past the other rules: where `""` means no value, say so with `#[EmptyToNull]`.
+
 ## Absent vs Null vs Empty String
 
-The factory distinguishes three states for each field:
+The factory distinguishes these states for each field:
 
 | What frontend sends | Meaning | Behavior |
 |---------------------|---------|----------|
 | Field absent | Don't touch | The default; without one, `required`. The validator's presence rules can reject it too |
-| `"name": null` | Clear (null) | `null` for nullable types; for non-nullable ones the default, or `required` without one |
-| `"name": ""` | Clear (empty string) | Preserve `""`, then cast per type |
+| `"name": null` | No value | Presence rules alone; then `null` for nullable types, the default for others, or `required` without one |
+| `"name": ""` | Empty string | A value for a field that holds text — kept and checked by every rule; no value for any other type, and under `#[EmptyToNull]` |
 | `"name": "hello"` | Set value | Normal processing pipeline |
 
-This distinction is important for PATCH-style updates where absent fields should not be modified, `null` explicitly clears a nullable field, and `""` sets an empty string.
+This distinction is important for PATCH-style updates: absent fields are not modified, `null` clears a nullable field unless `filled` refuses it, and `""` sets an empty string.
 
 ### Presence rules decide about absent fields
 
-The factory passes an absent field's rules to the validator — but no value: the field stays absent from the validated data, as the client sent it, and the validator decides whether it may be missing. solophp/validator checks an absent field by its [presence rules](https://solophp.github.io/Validator/features/rules#presence-rules) alone and does not apply `string` or `max:255` to a value nobody sent, `nullable` or not.
+The factory passes an absent field's rules to the validator — but no value: the field stays absent from the validated data, as the client sent it, and the validator decides whether it may be missing. solophp/validator checks an absent field by its presence rules alone and does not apply `string` or `max:255` to a value nobody sent.
 
 ```php
 #[Validate('in:individual,company')]
 public string $company_type = 'individual',
 
 // May be omitted in general — but not when company_type is 'company'.
-#[Validate('nullable|string|max:255|required_if:company_type,company')]
+#[Validate('string|max:255|required_if:company_type,company')]
 public ?string $name = null,
 
 // Must be sent, though an empty list is an answer: [] clears the tags,
@@ -84,8 +125,9 @@ Available rules depend on your `ValidatorInterface` implementation. The examples
 | Rule | Description | Example |
 |------|-------------|---------|
 | `required` | Must be present and not empty | `'required'` |
+| `filled` | May be absent; when present, not empty | `'filled'` |
 | `present` | Must be present, may be empty | `'present'` |
-| `nullable` | Can be `null` | `'nullable'` |
+| `nullable` | `""` and `[]` count as no value too, as `null` always does — not needed for [no value](#no-value) | `'nullable'` |
 | `string` | Must be a string | `'string'` |
 | `integer` | Must be an integer | `'integer'` |
 | `numeric` | Must be numeric | `'numeric'` |
@@ -117,7 +159,7 @@ $validator = new Validator([
 
 The factory passes rule strings to `ValidatorInterface::validate()` verbatim — it does not substitute placeholders or otherwise transform them.
 
-Cross-field references in rules (`unique:users,email,{id}`, `exists:…,scope_col,{field}`, `required_if:type,manual`) are the validator's concern. A typical implementation resolves `{id}` / sibling-field references against the validation payload, which contains normalized fields present in the request (before casting), except fields rejected by a normalizer — including those declared with `#[FromRoute]` and `#[FromContext]`, and those without a `#[Validate]` of their own.
+Cross-field references in rules (`unique:users,email,{id}`, `exists:…,scope_col,{field}`, `required_if:type,manual`) are the validator's concern. A typical implementation resolves `{id}` / sibling-field references against the validation payload, which contains normalized fields present in the request (before casting, with a `""` the field cannot hold as `null`), except fields rejected by a normalizer — including those declared with `#[FromRoute]` and `#[FromContext]`, and those without a `#[Validate]` of their own.
 
 So declare the referenced field as a real property:
 
@@ -222,7 +264,7 @@ before moving on to later parent properties.
 ```php
 // ❌ ConfigurationException: nullable rule with non-nullable type
 #[Validate('nullable|email')]
-public string $email,  // Should be ?string
+public string $email,  // Should be ?string, which needs no 'nullable'
 
 // ❌ ConfigurationException: required with default value
 #[Validate('required|string')]
@@ -251,6 +293,8 @@ interface ValidatorInterface
 ```
 
 We recommend [solophp/validator](https://github.com/SoloPHP/Validator).
+
+`validate()` runs once per input object and gets the rules of every field the client sends. An absent field's key is missing from the data, and a field with [no value](#no-value) is `null` in it. Since solophp/contracts 1.8 the interface says how both are checked: by presence rules alone. A validator of your own has to keep that; solophp/validator does from 4.2.
 
 ---
 
@@ -293,11 +337,12 @@ final class CreateProductInput
         public float $price,
         #[Validate('required|integer|exists:categories,id')]
         public int $categoryId,
-        #[Validate('nullable|string|max:1000')]
+        #[Validate('string|max:1000')]
         public ?string $description = null,
-        #[Validate('nullable|array')]
+        #[Validate('array')]
         public ?array $tags = null,
-        #[Validate('nullable|url')]
+        #[Validate('url')]
+        #[EmptyToNull]                                   // "" is no image, not a bad URL
         public ?string $imageUrl = null,
         #[Validate('in:draft,published')]
         public string $status = 'draft',
@@ -308,24 +353,27 @@ final class CreateProductInput
 
 ### Search Filters
 
+A search form sends its empty fields as `?query=&sortBy=`: on the class, `#[EmptyToNull]` reads each as no filter.
+
 ```php
+#[EmptyToNull]
 #[Input]
 final class SearchInput
 {
     public function __construct(
-        #[Validate('nullable|string|max:100')]
+        #[Validate('string|max:100')]
         public ?string $query = null,
-        #[Validate('nullable|in:name,price,date')]
+        #[Validate('in:name,price,date')]
         public ?string $sortBy = null,
-        #[Validate('nullable|in:asc,desc')]
+        #[Validate('in:asc,desc')]
         public ?string $sortDir = null,
         #[Validate('integer|min_value:1|max_value:100')]
-        public int $limit = 20,
+        public int $limit = 20,                          // ?limit= is 20
         #[Validate('integer|min_value:1')]
         public int $page = 1,
-        #[Validate('nullable|date:Y-m-d')]
+        #[Validate('date:Y-m-d')]
         public ?string $dateFrom = null,
-        #[Validate('nullable|date:Y-m-d|after:dateFrom')]
+        #[Validate('date:Y-m-d|after:dateFrom')]
         public ?string $dateTo = null,
     ) {
     }

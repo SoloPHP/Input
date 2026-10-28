@@ -40,7 +40,7 @@ $dto->address->city;   // 'Kyiv'
 Inputs::toArray($dto);       // ['carrier' => 'ups', 'address' => ['city' => 'Kyiv', 'zip' => '01001'], 'billing' => null]
 ```
 
-Errors use the field path: `address.zip` for a field of the nested object, `address` itself (`['rule' => 'array']`) when the value is not an object. `""` is no value — `null`, or `required` for a non-nullable field — and for an `#[Items]` list an empty list, as for any array field. A `#[Normalize]` on the field runs before validation and can turn a JSON string into the object to read. Nested objects can contain `#[Items]` lists and further nested objects (`from.stock.0.quantity`).
+Errors use the field path: `address.zip` for a field of the nested object, `address` itself (`['rule' => 'array']`) when the value is not an object. `""` is no value — `null`, the default, or `required` — for a nested object and an `#[Items]` list alike; an empty list is `[]`. A `#[Normalize]` on the field runs before validation and can turn a JSON string into the object to read. Nested objects can contain `#[Items]` lists and further nested objects (`from.stock.0.quantity`).
 
 The nested class must be marked `#[Input]` and be concrete; it is validated together with its parent when metadata is built. A field typed with a class that is not an input class needs a `#[Caster]`, a `#[Generator]` or `#[FromContext]`.
 
@@ -315,7 +315,7 @@ final class CreateOrderInput
         #[Validate('array')]
         #[Items(AddressInput::class)]
         public array $addresses,
-        #[Validate('nullable|string|max:500')]
+        #[Validate('string|max:500')]
         public ?string $notes = null,
     ) {
     }

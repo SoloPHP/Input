@@ -39,9 +39,9 @@ final class UpdateProductInput
         #[FromContext('authUserId')]
         public int $updatedBy,          // supplied by the application — not part of the schema
         #[FromBody('meta.status')]
-        #[Validate('nullable|in:draft,published')]
+        #[Validate('in:draft,published')]
         public ?string $status = null,
-        #[Validate('nullable|string|required_if:status,published')]
+        #[Validate('string|required_if:status,published')]
         public ?string $slug = null,
         #[DateFormat('Y-m-d')]
         public ?DateTimeImmutable $publishAt = null,
@@ -79,7 +79,7 @@ $schema = $factory->schema(UpdateProductInput::class);
     'meta.status' => [
         'property' => 'status', 'source' => 'body', 'type' => 'string', 'nullable' => true,
         'required' => false, 'requiredIf' => null, 'hasDefault' => true, 'default' => null,
-        'rules' => [/* nullable, in:draft,published */],
+        'rules' => [/* in:draft,published */],
     ],
     'slug' => [
         // … 'requiredIf' references the input key of `status`:
@@ -110,8 +110,8 @@ $schema = $factory->schema(UpdateProductInput::class);
 | `property` | `string` | The PHP property name |
 | `source` | `'body' \| 'route' \| null` | Where the client sends it; `null` = the handle method's default bag (body or query) |
 | `type` | `?string` | Declared PHP type (`null` when untyped) |
-| `nullable` | `bool` | Whether the type allows `null` |
-| `required` | `bool` | Literal `required` rule present |
+| `nullable` | `bool` | Whether the type allows `null`: sent with [no value](/features/validation#no-value), the field is `null` — unless a presence rule in `rules` (`required`, `filled`, `required_if`) refuses it |
+| `required` | `bool` | Whether the client must send it: a `required` rule, or no default — absent, it fails `required` |
 | `requiredIf` | `{field, value} \| null` | First well-formed `required_if`; `field` is the referenced field's input key |
 | `hasDefault` | `bool` | Whether the property declares a default |
 | `default` | `mixed` | The default (an enum case as its value); `null` without one |

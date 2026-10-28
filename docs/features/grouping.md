@@ -414,7 +414,7 @@ final class ComplexInput
         #[Group('meta')]
         #[Exclude]
         public int $requestedAt,
-        #[Validate('nullable|string')]
+        #[Validate('string')]
         // Strings are auto-trimmed by default.
         #[Group('search')]
         public ?string $query = null,

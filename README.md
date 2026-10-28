@@ -12,7 +12,7 @@ Typed, validated input DTOs for PHP 8.3+. Mark a class `#[Input]` and declare it
 composer require solophp/input
 ```
 
-Requires PHP 8.3+, a PSR-7 implementation and a validator implementing `Solo\Contracts\Validator\ValidatorInterface`, such as [solophp/validator](https://github.com/SoloPHP/Validator).
+Requires PHP 8.3+, a PSR-7 implementation and a validator implementing `Solo\Contracts\Validator\ValidatorInterface` that checks a missing or `null` field by presence rules only, as the interface says since solophp/contracts 1.8 — such as [solophp/validator](https://github.com/SoloPHP/Validator) 4.2 or later.
 
 ## Example
 
@@ -49,7 +49,7 @@ $input = $factory->fromBody(UpdateProductInput::class, $request, route: ['id' =>
 
 $input->id;    // int, from the URL path
 $input->name;  // string, from the body
-$input->stock; // int, 0 when the client left it out
+$input->stock; // int, 0 when the client left it out or sent no value
 ```
 
 Invalid input throws one `ValidationException` with every error, keyed by the field the client sent.
@@ -61,6 +61,7 @@ Invalid input throws one `ValidationException` with every error, keyed by the fi
 - [Installation](https://solophp.github.io/Input/guide/installation)
 - [Quick Start](https://solophp.github.io/Input/guide/quick-start)
 - [Configuration](https://solophp.github.io/Input/guide/configuration)
+- [Upgrading from 1.0](https://solophp.github.io/Input/guide/upgrading)
 - [Attributes](https://solophp.github.io/Input/features/field-attribute)
 - [Type Casting](https://solophp.github.io/Input/features/type-casting)
 - [Processing Stages](https://solophp.github.io/Input/features/processors)
