@@ -28,8 +28,9 @@ final class BuiltInCaster
     public const array CAST_TYPES = ['int', 'float', 'bool', 'string', 'array', 'json', 'decimal'];
 
     /**
-     * What cast() returns for `""` by type — kept as data, so a property's
-     * `blank` costs no call while its metadata is built.
+     * What cast() returns for `""` by type — kept as data, so telling
+     * whether a property's `""` is no value costs no call while its metadata
+     * is built.
      */
     public const array BLANK = [
         'int'      => null,
@@ -73,8 +74,9 @@ final class BuiltInCaster
      * Convert `$value` to `$type` without losing information — or return null
      * when it cannot be: `'12abc'` is no int, `['5']` no float, `true` no
      * number, `'maybe'` no bool. `""` reads as `BLANK` says: null for int /
-     * float / bool / decimal — no value to the client, no fit for the
-     * application — a string keeps it, an array reads it as `[]`.
+     * float / bool / decimal — no fit for the application's `""` — a string
+     * keeps it, an array reads it as `[]`. A client's `""` that a type cannot
+     * hold never gets here: it is no value.
      */
     public function cast(string $type, mixed $value): mixed
     {

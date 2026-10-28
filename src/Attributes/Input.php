@@ -20,7 +20,8 @@ use Attribute;
  * reads as its default, but `Inputs::toArray()` leaves it out unless asked
  * for every field: the array is the change set, so a default never
  * overwrites what is stored. A subclass without a marker of its own keeps
- * the flag; one with `#[Input]` decides for itself.
+ * the flag; one with `#[Input]` decides for itself. A null clears a nullable
+ * field; one the client may leave out but not clear says so with `filled`.
  *
  * Example:
  * ```php
@@ -40,10 +41,10 @@ use Attribute;
  * final readonly class UpdateProductInput
  * {
  *     public function __construct(
- *         #[Validate('string|max:255')]
- *         public ?string $name = null,
- *         #[Validate('nullable|string')]
- *         public ?string $note = null,
+ *         #[Validate('filled|string|max:255')]
+ *         public ?string $name = null,   // may be left out, not cleared
+ *         #[Validate('string')]
+ *         public ?string $note = null,   // null clears it
  *     ) {
  *     }
  * }

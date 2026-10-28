@@ -76,14 +76,8 @@ final class FieldValueResolver
         ?array &$error,
     ): mixed {
         $error = null;
-        // The metadata settled what a client's "" is: the application's "" is
-        // a value, and so is "" wherever `blank` keeps it.
-        if ($value === '' && $property->blank !== '') {
-            if ($property->blank !== null) {
-                return $property->blank;
-            }
-            $value = null;
-        }
+        // A client's "" the type cannot hold is null by now; any other "" —
+        // the application's too — is a value.
         if ($value === null) {
             return $this->nullValue($property, $className, $error);
         }
@@ -237,7 +231,7 @@ final class FieldValueResolver
     {
         $error = null;
 
-        // Each reader here has its `blank` arm in MetadataBuilder.
+        // Each reader here has its `blankIsNoValue` arm in MetadataBuilder.
         $cast = match (true) {
             $property->enumClass !== null => $this->builtInCaster->castEnum($property->enumClass, $value),
             $property->dateClass !== null => $this->builtInCaster->castDate(
@@ -250,8 +244,8 @@ final class FieldValueResolver
             default => $value,
         };
 
-        // "" is read like any other value: what the client's "" means was
-        // settled by the property's `blank`; the application's is a value.
+        // "" is read like any other value: a client's "" the type cannot
+        // hold was read as null before validation.
         if ($cast === null) {
             $error = $property->castFailure;
         }

@@ -16,9 +16,10 @@ use Solo\Input\Pipeline\TypeGuard;
  * Immutable per-field input binding and type information.
  * Null source uses the handle method's default. Normalizers prepare raw input;
  * one built-in/custom decoder produces its type; post-processors receive that
- * type only after the whole tree is valid. `blank` describes how a client
- * empty string is read before decoding. `appSupplied` marks a value the
- * application supplies — context or a generator — instead of the client.
+ * type only after the whole tree is valid. `blankIsNoValue` says that the
+ * type cannot hold a client's empty string: it is no value, read as null
+ * before validation. `appSupplied` marks a value the application supplies —
+ * context or a generator — instead of the client.
  *
  * `resultGuard` is set where something other than a built-in decoder produces
  * the value — a custom caster, a post-processor, the application (context, a
@@ -89,7 +90,7 @@ final readonly class PropertyMetadata
         public ?TypeGuard $resultGuard,
         public ?TypeGuard $memberGuard,
         public ?string $producedItems,
-        public mixed $blank,
+        public bool $blankIsNoValue,
     ) {
         $this->buildsChildren = $items !== null || $nested !== null;
     }

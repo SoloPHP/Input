@@ -170,8 +170,10 @@ final class InputFactory
     }
 
     /**
-     * Normalize all present fields, validate the raw bag, then decode values
-     * and children. Pure custom casters participate in this same error pass.
+     * Normalize all present fields, validate the normalized bag, then decode
+     * values and children. A `""` the type cannot hold is no value, read as
+     * null, so the validator checks it by presence rules alone. Pure custom
+     * casters participate in this same error pass.
      * A field the input lacks and the constructor has no default for fails
      * `required`, unless the validator already reported it.
      *
@@ -215,6 +217,9 @@ final class InputFactory
                 }
             }
             if ($property->emptyToNull && is_string($value) && trim($value) === '') {
+                $value = null;
+            }
+            if ($value === '' && $property->blankIsNoValue) {
                 $value = null;
             }
 

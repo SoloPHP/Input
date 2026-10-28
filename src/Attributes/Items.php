@@ -17,7 +17,7 @@ use Attribute;
  *
  * Example:
  * ```php
- * #[Validate('nullable|array')]
+ * #[Validate('array')]
  * #[Items(OrderLineInput::class)]
  * public ?array $items = null,
  * ```
