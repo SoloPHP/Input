@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.1.0 — Unreleased
+## 1.1.0 — 2026-10-28
 
 An empty input means one thing: `null`, and a `""` the field's type cannot hold, are no value. The factory reads such a `""` as `null` before validation, the validator checks a `null` like a missing field — by presence rules alone — and the field holds `null`, keeps its default or reports `required`. Values, absent fields and `schema()` are unchanged. See the [upgrade guide](https://solophp.github.io/Input/guide/upgrading).
 
