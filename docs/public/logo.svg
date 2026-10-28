@@ -6,5 +6,5 @@
     </linearGradient>
   </defs>
   <rect width="128" height="128" rx="24" fill="url(#grad)"/>
-  <text x="64" y="78" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700">RH</text>
+  <text x="64" y="78" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="700">IP</text>
 </svg>
